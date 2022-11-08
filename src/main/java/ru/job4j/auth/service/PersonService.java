@@ -24,8 +24,14 @@ public class PersonService {
         return repository.findById(id);
     }
 
-    public Person save(Person person) {
-        return repository.save(person);
+    public Optional<Person> save(Person person) {
+        Optional<Person> result = Optional.empty();
+        try {
+            result = Optional.of(repository.save(person));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     public boolean existsById(int id) {
