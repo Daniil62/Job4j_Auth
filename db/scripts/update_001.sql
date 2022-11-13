@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS person (
     id SERIAL PRIMARY KEY NOT NULL,
     login VARCHAR NOT NULL UNIQUE,
-    password VARCHAR
+    password VARCHAR NOT NULL,
+    photo VARCHAR
 );
