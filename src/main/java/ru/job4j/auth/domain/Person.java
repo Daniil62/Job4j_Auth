@@ -14,7 +14,7 @@ public class Person {
     private int id;
     private String login;
     private String password;
-    private String photo = "";
+    private String photo;
 
     public int getId() {
         return id;
@@ -60,6 +60,6 @@ public class Person {
 
     @Override
     public int hashCode() {
-        return login.hashCode() * (password.hashCode() + 31);
+        return login.hashCode() * 31 + password.hashCode();
     }
 }

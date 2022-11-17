@@ -1,6 +1,5 @@
 package ru.job4j.auth.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +14,9 @@ import ru.job4j.auth.service.PersonService;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,16 +26,13 @@ public class PersonController {
 
     private final PersonService persons;
     private final BCryptPasswordEncoder encoder;
-    private final ObjectMapper objectMapper;
     private static final Logger LOGGER =
             LoggerFactory.getLogger(PersonController.class.getSimpleName());
 
     public PersonController(final PersonService persons,
-                            BCryptPasswordEncoder encoder,
-                            ObjectMapper objectMapper) {
+                            BCryptPasswordEncoder encoder) {
         this.persons = persons;
         this.encoder = encoder;
-        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/all")
@@ -100,29 +96,25 @@ public class PersonController {
         return response;
     }
 
+    @PatchMapping("/update")
+    public ResponseEntity<Person> patch(@RequestBody Person person) throws
+            InvocationTargetException, IllegalAccessException, PSQLException {
+        return ResponseEntity.status(HttpStatus.OK).body(persons.patch(person));
+    }
+
     @ExceptionHandler(value = { IllegalArgumentException.class })
     public void exceptionHandler(Exception e,
                                  HttpServletRequest request,
                                  HttpServletResponse response) throws IOException {
-        handleError(e, request, response, e.getMessage());
+        persons.handleError(e, request, response, e.getMessage(), LOGGER);
     }
 
     @ExceptionHandler(value = { IOException.class })
     public void ioExceptionHandler(Exception e,
                                  HttpServletRequest request,
                                  HttpServletResponse response) throws IOException {
-        handleError(e, request, response, "file not found");
+        persons.handleError(e, request, response, "file not found", LOGGER);
     }
 
-    private void handleError(Exception e, HttpServletRequest request,
-                             HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpStatus.BAD_REQUEST.value());
-        response.setContentType("application/json");
-        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() { {
-            put("request", request.getRequestURI());
-            put("message", message);
-            put("type", e.getClass());
-        }}));
-        LOGGER.error(e.getLocalizedMessage());
-    }
+
 }
