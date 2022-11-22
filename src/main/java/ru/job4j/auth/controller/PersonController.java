@@ -7,12 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.auth.domain.Person;
 import ru.job4j.auth.service.PersonService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
@@ -29,8 +31,7 @@ public class PersonController {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(PersonController.class.getSimpleName());
 
-    public PersonController(final PersonService persons,
-                            BCryptPasswordEncoder encoder) {
+    public PersonController(final PersonService persons, BCryptPasswordEncoder encoder) {
         this.persons = persons;
         this.encoder = encoder;
     }
@@ -50,12 +51,15 @@ public class PersonController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Optional<Person>> update(@RequestBody Person person) throws PSQLException {
+    @Validated
+    public ResponseEntity<Optional<Person>> update(@Valid @RequestBody Person person)
+            throws PSQLException {
         return ResponseEntity.ok().body(persons.save(person));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Boolean> delete(@PathVariable int id) {
+    @Validated
+    public ResponseEntity<Boolean> delete(@Valid @PathVariable int id) {
         boolean result = persons.existsById(id);
         if (result) {
             persons.deleteById(id);
@@ -68,10 +72,10 @@ public class PersonController {
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<Boolean> signUp(@RequestBody Person person) throws PSQLException {
-        String password = person.getPassword();
-        if (password.length() < 6) {
-            throw new IllegalArgumentException("Password should be more than six symbols.");
+    @Validated
+    public ResponseEntity<Boolean> signUp(@Valid @RequestBody Person person) throws PSQLException {
+        if (person.getId() != 0) {
+            person.setId(0);
         }
         person.setPassword(encoder.encode(person.getPassword()));
         return ResponseEntity
@@ -97,7 +101,8 @@ public class PersonController {
     }
 
     @PatchMapping("/update")
-    public ResponseEntity<Person> patch(@RequestBody Person person) throws
+    @Validated
+    public ResponseEntity<Person> patch(@Valid @RequestBody Person person) throws
             InvocationTargetException, IllegalAccessException, PSQLException {
         return ResponseEntity.status(HttpStatus.OK).body(persons.patch(person));
     }
@@ -115,6 +120,4 @@ public class PersonController {
                                  HttpServletResponse response) throws IOException {
         persons.handleError(e, request, response, "file not found", LOGGER);
     }
-
-
 }

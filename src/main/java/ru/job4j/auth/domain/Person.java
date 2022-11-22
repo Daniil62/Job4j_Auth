@@ -4,6 +4,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Size;
 import java.util.Objects;
 
 @Entity
@@ -12,7 +14,11 @@ public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Email(message = "login must be an email.")
     private String login;
+
+    @Size(min = 6, message = "password must contains 6 and more symbols")
     private String password;
     private String photo;
 
